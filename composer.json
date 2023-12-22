@@ -1,0 +1,66 @@
+{
+    "name": "tobento/service-notifier",
+    "type": "library",
+    "description": "Notifier interface for PHP applications.",
+    "keywords": [
+        "tobento",
+        "package",
+        "PHP",
+        "notifier",
+        "email",
+        "sms"
+    ],
+    "homepage": "https://www.tobento.ch",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tobias Strub",
+            "email": "info@tobento.ch",
+            "homepage": "https://www.tobento.ch"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.0",
+        "tobento/service-filesystem": "^1.0.5",
+        "tobento/service-autowire": "^1.0",
+        "tobento/service-repository": "^1.0.1",
+        "tobento/service-mail": "^1.0",
+        "psr/container": "^2.0",
+        "psr/http-message": "^1.0",
+        "psr/event-dispatcher": "^1.0",
+        "symfony/notifier": "^6.0"
+    },
+    "suggest": {
+        "tobento/service-repository-storage": "To support storage channel",
+        "tobento/service-migration": "To support storage repository migration"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "vimeo/psalm": "^4.0",
+        "symfony/vonage-notifier": "^6.0",
+        "symfony/slack-notifier": "^6.0",
+        "symfony/one-signal-notifier": "^6.0",
+        "tobento/service-container": "^1.0",
+        "tobento/service-event": "^1.0",
+        "tobento/service-queue": "^1.0",
+        "tobento/service-repository-storage": "^1.0",
+        "tobento/service-migration": "^1.0.8",
+        "tobento/service-user": "^1.0.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tobento\\Service\\Notifier\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tobento\\Service\\Notifier\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testdox --colors=always",
+        "psalm": "vendor/bin/psalm"
+    }
+}

@@ -79,8 +79,8 @@ class SomeService
     public function send(NotifierInterface $notifier): void
     {
         // Create a Notification that has to be sent:
-        // using the "email" and "sms" channel
-        $notification = (new Notification('New Invoice', ['email', 'sms']))
+        // using the "mail" and "sms" channel
+        $notification = (new Notification(subject: 'New Invoice', channels: ['mail', 'sms']))
             ->content('You got a new invoice for 15 EUR.');
 
         // The receiver of the notification:
@@ -95,7 +95,7 @@ class SomeService
 }
 ```
 
-Check out the [Notifications](#notifications) section to learn more about the available notfications you can create or you might create your own notification class fitting your application.
+Check out the [Notifications](#notifications) section to learn more about the available notifications you can create or you might create your own notification class fitting your application.
 
 Check out the [Recipients](#recipients) section to learn more about the available recipients you can create or you might create your own recipient class fitting your application.
 
@@ -138,7 +138,7 @@ use Tobento\Service\Notifier\Notification;
 $notification = new Notification(
     subject: 'New Invoice',
     content: 'You got a new invoice for 15 EUR.',
-    channels: ['email', 'sms'],
+    channels: ['mail', 'sms'],
 );
 ```
 
@@ -166,7 +166,7 @@ use Tobento\Service\Notifier\Message;
 
 $notification = (new Notification(
     subject: 'General subject used if no specific message',
-    channels: ['email', 'sms'],
+    channels: ['mail', 'sms'],
 ))
 ->addMessage('sms', new Message\Sms(
     subject: 'Specific sms message',
@@ -914,7 +914,7 @@ $repository->create([
 
 #### Accessing Storage Notifications
 
-Once notifications are store, you can retrieve the notifications using the repository from the channel:
+Once notifications are stored, you can retrieve the notifications using the repository from the channel:
 
 ```php
 $channel = $channels->get(name: 'storage/database');
@@ -1029,7 +1029,7 @@ use Tobento\Service\Notifier\NotifierInterface;
 use Tobento\Service\Notifier\Notifier;
 use Tobento\Service\Notifier\ChannelsInterface;
 use Tobento\Service\Notifier\Channels;
-use Tobento\Service\Notifier\QueueHandler;
+use Tobento\Service\Notifier\Queue\QueueHandler;
 use Tobento\Service\Queue\QueueInterface;
 
 $notifier = new Notifier(

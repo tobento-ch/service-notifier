@@ -93,7 +93,7 @@ class Channel implements ChannelInterface
             'recipient_id' => $recipient->getId(),
             'recipient_type' => $recipient->getType(),
             'data' => $message->getData(),
-            'read_at' => null,
+            //'read_at' => null,
             'created_at' => null,
         ]);
     }

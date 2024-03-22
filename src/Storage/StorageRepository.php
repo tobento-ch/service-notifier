@@ -28,6 +28,7 @@ class StorageRepository extends DefaultStorageRepository
     protected function configureColumns(): iterable|ColumnsInterface
     {
         return [
+            Column\Id::new(),
             Column\Text::new('name')->type(length: 255),
             Column\Text::new('recipient_id')->type(length: 36),
             Column\Text::new('recipient_type')->type(length: 255),

@@ -811,6 +811,7 @@ The storage needs to have the following table columns:
 
 | Column | Type | Description |
 | --- | --- | --- |
+| ```id``` | bigint(21) primary key | - |
 | ```name``` | varchar(255) | Used to store the notification name |
 | ```recipient_id``` | varchar(36) | Used to store the recipient id |
 | ```recipient_type``` | varchar(255) | Used to store the recipient type |

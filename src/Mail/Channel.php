@@ -21,7 +21,7 @@ use Tobento\Service\Notifier\Address;
 use Tobento\Service\Notifier\Exception\UndefinedMessageException;
 use Tobento\Service\Notifier\Exception\UndefinedAddressException;
 use Tobento\Service\Mail\MailerInterface;
-use Tobento\Service\Mail\Message;
+use Tobento\Service\Mail\MessageInterface;
 use Tobento\Service\Mail\Address as Adr;
 use Tobento\Service\Autowire\Autowire;
 use Psr\Container\ContainerInterface;
@@ -69,10 +69,10 @@ class Channel implements ChannelInterface
      *
      * @param NotificationInterface $notification
      * @param RecipientInterface $recipient
-     * @return Message The sent message.
+     * @return MessageInterface The sent message.
      * @throws \Throwable
      */
-    public function send(NotificationInterface $notification, RecipientInterface $recipient): Message
+    public function send(NotificationInterface $notification, RecipientInterface $recipient): MessageInterface
     {
         if (! $notification instanceof ToMail) {
             throw new UndefinedMessageException($this->name(), $notification, $recipient);
@@ -83,12 +83,12 @@ class Channel implements ChannelInterface
             ['recipient' => $recipient, 'channel' => $this->name()]
         );
         
-        if (! $message instanceof Message) {
+        if (! $message instanceof MessageInterface) {
             throw new UndefinedMessageException(
                 channel: $this->name(),
                 notification: $notification,
                 recipient: $recipient,
-                message: sprintf('Mail message needs to be an instanceof %s', Message::class),
+                message: sprintf('Mail message needs to be an instanceof %s', MessageInterface::class),
             );
         }
         

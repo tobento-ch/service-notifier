@@ -84,4 +84,10 @@ class UserRecipientTest extends TestCase
     {
         $this->assertSame(User::class, (new UserRecipient(new User()))->getType());
     }
+    
+    public function testUserMethod()
+    {
+        $user = new User();
+        $this->assertTrue($user === (new UserRecipient($user))->user());
+    }
 }

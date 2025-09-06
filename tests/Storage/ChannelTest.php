@@ -60,6 +60,18 @@ class ChannelTest extends TestCase
         $message = $channel->send(notification: $notification, recipient: $recipient);
     }
     
+    public function testSendThrowsUndefinedAddressExceptionIfEmpty()
+    {
+        $this->expectException(UndefinedAddressException::class);
+        
+        $channel = $this->createChannel();
+        
+        $notification = new Notification('Subject');
+        $recipient = new Recipient(id: 0);
+        
+        $message = $channel->send(notification: $notification, recipient: $recipient);
+    }
+    
     public function testSendsMessage()
     {
         $channel = $this->createChannel();

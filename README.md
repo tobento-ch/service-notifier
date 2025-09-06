@@ -17,7 +17,9 @@ Notifier interface for PHP applications using [Symfony Notifier](https://github.
         - [Abstract Notification](#abstract-notification)
     - [Recipients](#recipients)
         - [Recipient](#recipient)
+        - [Address Recipient](#address-recipient)
         - [User Recipient](#user-recipient)
+        - [Composite Recipient](#composite-recipient)
     - [Channel](#channel)
         - [Mail Channel](#mail-channel)
             - [Mail Notification](#mail-notification)
@@ -243,6 +245,20 @@ $recipient->addAddress(
 );
 ```
 
+### Address Recipient
+
+The ```AddressRecipient::class``` may be used if you have installed the [User Service](https://github.com/tobento-ch/service-user).
+
+```php
+use Tobento\Service\Notifier\AddressRecipient;
+use Tobento\Service\User\AddressInterface;
+
+$recipient = new AddressRecipient(
+    address: $address, // AddressInterface
+    channels: [],
+);
+```
+
 ### User Recipient
 
 The ```UserRecipient::class``` may be used if you have installed the [User Service](https://github.com/tobento-ch/service-user).
@@ -254,6 +270,24 @@ use Tobento\Service\User\UserInterface;
 $recipient = new UserRecipient(
     user: $user, // UserInterface
     channels: [],
+);
+```
+
+### Composite Recipient
+
+The ```CompositeRecipient::class``` may be used to compose the recipient from multiple recipients. The first found address will be used.
+
+```php
+use Tobento\Service\Notifier\AddressRecipient;
+use Tobento\Service\Notifier\CompositeRecipient;
+use Tobento\Service\Notifier\Recipient;
+
+$recipient = new CompositeRecipient(
+    new AddressRecipient(address: $address),
+    (new Recipient())->addAddress(
+        channel: 'chat/slack',
+        address: ['key' => 'value']
+    ),
 );
 ```
 

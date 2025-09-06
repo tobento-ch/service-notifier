@@ -36,6 +36,16 @@ class UserRecipient implements RecipientInterface
     ) {}
     
     /**
+     * Returns the user.
+     *
+     * @return UserInterface
+     */
+    public function user(): UserInterface
+    {
+        return $this->user;
+    }
+    
+    /**
      * Returns the address for the specified channel or null if none.
      *
      * @param string $name The channel name.

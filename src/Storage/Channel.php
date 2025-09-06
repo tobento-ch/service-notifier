@@ -71,7 +71,7 @@ class Channel implements ChannelInterface
      */
     public function send(NotificationInterface $notification, RecipientInterface $recipient): object
     {
-        if (is_null($recipient->getId())) {
+        if (empty($recipient->getId())) {
             throw new UndefinedAddressException($this->name(), $notification, $recipient);
         }
         

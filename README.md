@@ -56,7 +56,7 @@ composer require tobento/service-notifier
 
 ## Requirements
 
-- PHP 8.0 or greater
+- PHP 8.4 or greater
 
 ## Highlights
 
@@ -82,7 +82,7 @@ class SomeService
     {
         // Create a Notification that has to be sent:
         // using the "mail" and "sms" channel
-        $notification = (new Notification(subject: 'New Invoice', channels: ['mail', 'sms']))
+        $notification = new Notification(subject: 'New Invoice', channels: ['mail', 'sms'])
             ->content('You got a new invoice for 15 EUR.');
 
         // The receiver of the notification:
@@ -151,7 +151,7 @@ If you want to support custom channels you may consider creating a custom notifi
 ```php
 use Tobento\Service\Notifier\Notification;
 
-$notification = (new Notification())
+$notification = new Notification()
     // you may prefer using the subject method:
     ->subject('New Invoice')
     // you may prefer using the content method:
@@ -166,10 +166,10 @@ In addition, you may add messages for specific channels:
 use Tobento\Service\Notifier\Notification;
 use Tobento\Service\Notifier\Message;
 
-$notification = (new Notification(
+$notification = new Notification(
     subject: 'General subject used if no specific message',
     channels: ['mail', 'sms'],
-))
+)
 ->addMessage('sms', new Message\Sms(
     subject: 'Specific sms message',
 ))
@@ -284,7 +284,7 @@ use Tobento\Service\Notifier\Recipient;
 
 $recipient = new CompositeRecipient(
     new AddressRecipient(address: $address),
-    (new Recipient())->addAddress(
+    new Recipient()->addAddress(
         channel: 'chat/slack',
         address: ['key' => 'value']
     ),
@@ -338,7 +338,7 @@ class SampleNotification extends AbstractNotification implements ToMail
      */
     public function toMail(RecipientInterface $recipient, string $channel, SomeService $service): Message
     {
-        return (new Message())
+        return new Message()
             // not required if none is defined, the address will be added on sending:
             ->to('to@example.com')
             
@@ -356,7 +356,7 @@ If you do not have defined a [default from address](https://github.com/tobento-c
 ```php
 use Tobento\Service\Mail\Message;
 
-$message = (new Message())
+$message = new Message()
     ->from('from@example.com');
 ```
 
@@ -372,8 +372,8 @@ $notification = new Notification(
 );
     
 // with specific mail message:
-$notification = (new Notification())
-    ->addMessage('mail', (new Mail\Message())
+$notification = new Notification()
+    ->addMessage('mail', new Mail\Message()
         ->subject('Subject')
         ->html('<p>Lorem Ipsum</p>')
     );
@@ -502,7 +502,7 @@ $notification = new Notification(
 );
     
 // with specific sms message:
-$notification = (new Notification())
+$notification = new Notification()
     ->addMessage('sms', new Message\Sms(
         subject: 'Sms message',
     ));
@@ -584,7 +584,7 @@ class SampleNotification extends AbstractNotification implements Message\ToChat
             // you may set message options:
             $options = new SlackOptions();
 
-            return new (Message\Chat('Chat message'))
+            return new Message\Chat('Chat message')
                 ->parameter(new MessageOptions($options));
         }
         
@@ -608,7 +608,7 @@ $notification = new Notification(
 );
     
 // with specific chat message:
-$notification = (new Notification())
+$notification = new Notification()
     ->addMessage('chat/slack', new Message\Chat(
         subject: 'Chat message',
     ));
@@ -623,7 +623,7 @@ use Tobento\Service\Notifier\Recipient;
 use Tobento\Service\Notifier\Address;
 use Tobento\Service\Notifier\Notification;
 
-$recipient = (new Recipient())
+$recipient = new Recipient()
     ->addAddress('chat/slack', ['channel' => 'name']);
 
 $address = $recipient->getAddressForChannel('chat/slack', new Notification('subject'));
@@ -659,7 +659,7 @@ class SampleNotification extends AbstractNotification implements Message\ToChat
                 'recipient_id' => $address['channel'] ?? null,
             ]);
 
-            return new (Message\Chat('Chat message'))
+            return new Message\Chat('Chat message')
                 ->parameter(new MessageOptions($options));
         }
         
@@ -727,7 +727,7 @@ class SampleNotification extends AbstractNotification implements Message\ToPush
             // you may set message options:
             $options = new OneSignalOptions([]);
 
-            return new (Message\Push('Push subject'))
+            return new Message\Push('Push subject')
                 ->content('Push content')
                 ->parameter(new MessageOptions($options));
         }
@@ -753,7 +753,7 @@ $notification = new Notification(
 );
     
 // with specific chat message:
-$notification = (new Notification())
+$notification = new Notification()
     ->addMessage('push/one-signal', new Message\Push(
         subject: 'Push subject',
         content: 'Push content',
@@ -769,7 +769,7 @@ use Tobento\Service\Notifier\Recipient;
 use Tobento\Service\Notifier\Address;
 use Tobento\Service\Notifier\Notification;
 
-$recipient = (new Recipient())
+$recipient = new Recipient()
     ->addAddress('push/one-signal', ['recipient_id' => 'id']);
 
 $address = $recipient->getAddressForChannel('push/one-signal', new Notification('subject'));
@@ -805,7 +805,7 @@ class SampleNotification extends AbstractNotification implements Message\ToPush
                 'recipient_id' => $address['recipient_id'] ?? null,
             ]);
 
-            return new (Message\Push('Push subject'))
+            return new Message\Push('Push subject')
                 ->content('Push content')
                 ->parameter(new MessageOptions($options));
         }
@@ -925,7 +925,7 @@ $notification = new Notification(
 );
     
 // with specific storage message:
-$notification = (new Notification())
+$notification = new Notification()
     ->addMessage('storage', new Message\Storage([
         'foo' => 'bar',
     ]));
@@ -1026,7 +1026,7 @@ You may queue your notification by just adding the ```Queue::class``` parameter:
 use Tobento\Service\Notifier\Notification;
 use Tobento\Service\Notifier\Parameter\Queue;
 
-$notification = (new Notification())
+$notification = new Notification()
     ->parameter(new Queue(
         // you may specify the queue to be used:
         name: 'secondary',

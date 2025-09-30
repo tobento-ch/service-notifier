@@ -17,7 +17,7 @@ use IteratorAggregate;
 use Countable;
 
 /**
- * ChannelMessagesInterface
+ * @extends IteratorAggregate<array-key, ChannelMessageInterface>
  */
 interface ChannelMessagesInterface extends IteratorAggregate, Countable
 {

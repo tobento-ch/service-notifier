@@ -158,7 +158,7 @@ class ChannelMessages implements ChannelMessagesInterface
     /**
      * Returns the iterator. 
      *
-     * @return Traversable
+     * @return Traversable<array-key, ChannelMessageInterface>
      */
     public function getIterator(): Traversable
     {

@@ -28,13 +28,13 @@ class StorageRepository extends DefaultStorageRepository
     protected function configureColumns(): iterable|ColumnsInterface
     {
         return [
-            Column\Id::new(),
-            Column\Text::new('name')->type(length: 255),
-            Column\Text::new('recipient_id')->type(length: 36),
-            Column\Text::new('recipient_type')->type(length: 255),
-            Column\Json::new('data'),
-            Column\Datetime::new('read_at')->type(nullable: true),
-            Column\Datetime::new('created_at')->type(nullable: true),
+            new Column\Id(),
+            new Column\Text('name')->type(length: 255),
+            new Column\Text('recipient_id')->type(length: 36),
+            new Column\Text('recipient_type')->type(length: 255),
+            new Column\Json('data'),
+            new Column\Datetime('read_at')->type(nullable: true),
+            new Column\Datetime('created_at')->type(nullable: true),
         ];
     }
 }

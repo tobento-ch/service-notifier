@@ -101,7 +101,7 @@ final class LazyChannels implements ChannelsInterface
         try {
             $factory = $this->autowire->resolve($this->channels[$name]['factory']);
         } catch (AutowireException $e) {
-            throw new ChannelCreateException($name, $e->getMessage(), (int)$e->getCode(), $e);
+            throw new ChannelCreateException($name, $e->getMessage(), $e->getCode(), $e);
         }
         
         if (! $factory instanceof ChannelFactoryInterface) {

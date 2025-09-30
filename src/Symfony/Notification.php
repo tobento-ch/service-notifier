@@ -53,17 +53,17 @@ class Notification extends SymfonyNotification implements
         return $this->message;
     }
     
-    public function asSmsMessage(SmsRecipientInterface $recipient, string $transport = null): ?SmsMessage
+    public function asSmsMessage(SmsRecipientInterface $recipient, null|string $transport = null): ?SmsMessage
     {
         return $this->message instanceof SmsMessage ? $this->message : null;
     }
     
-    public function asChatMessage(RecipientInterface $recipient, string $transport = null): ?ChatMessage
+    public function asChatMessage(RecipientInterface $recipient, null|string $transport = null): ?ChatMessage
     {
         return $this->message instanceof ChatMessage ? $this->message : null;
     }
     
-    public function asPushMessage(RecipientInterface $recipient, string $transport = null): ?PushMessage
+    public function asPushMessage(RecipientInterface $recipient, null|string $transport = null): ?PushMessage
     {
         return $this->message instanceof PushMessage ? $this->message : null;
     }

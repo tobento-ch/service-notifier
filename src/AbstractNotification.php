@@ -86,7 +86,8 @@ abstract class AbstractNotification implements NotificationInterface
      * Returns the mail handler creating the mail message.
      *
      * @return callable
-     * @psalm-suppress all
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     public function toMailHandler(): callable
     {
@@ -97,7 +98,8 @@ abstract class AbstractNotification implements NotificationInterface
      * Returns the sms handler creating the sms message.
      *
      * @return callable
-     * @psalm-suppress all
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     public function toSmsHandler(): callable
     {
@@ -108,7 +110,8 @@ abstract class AbstractNotification implements NotificationInterface
      * Returns the storage handler creating the storage message.
      *
      * @return callable
-     * @psalm-suppress all
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     public function toStorageHandler(): callable
     {
@@ -119,7 +122,8 @@ abstract class AbstractNotification implements NotificationInterface
      * Returns the chat handler creating the chat message.
      *
      * @return callable
-     * @psalm-suppress all
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     public function toChatHandler(): callable
     {
@@ -130,7 +134,8 @@ abstract class AbstractNotification implements NotificationInterface
      * Returns the push handler creating the push message.
      *
      * @return callable
-     * @psalm-suppress all
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
      */
     public function toPushHandler(): callable
     {

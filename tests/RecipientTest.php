@@ -45,6 +45,16 @@ class RecipientTest extends TestCase
         $this->assertSame('foo@example.com', $address->email());
     }
     
+    public function testGetAddressForChannelMethodReturnsDefaultEmailAddress()
+    {
+        $recipient = new Recipient(email: 'foo@example.com');
+        $notification = new Notification('Subject');
+        $address = $recipient->getAddressForChannel(name: 'mail/foo', notification: $notification);
+        
+        $this->assertInstanceof(Address\Email::class, $address);
+        $this->assertSame('foo@example.com', $address->email());
+    }
+    
     public function testGetAddressForChannelMethodReturnsEmailAddressWithEmailObj()
     {
         $recipient = new Recipient(email: new Address\Email('foo@example.com'));

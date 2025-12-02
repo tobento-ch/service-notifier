@@ -61,6 +61,9 @@ class UserRecipient implements RecipientInterface
             str_starts_with($name, 'sms') && $this->user->smartphone() => new Address\Phone(
                 phone: $this->user->smartphone(),
             ),
+            str_starts_with($name, 'chat') && $this->user->meta('channel_addresses.'.$name) => new Address\Dsn(
+                dsn: $this->user->meta('channel_addresses.'.$name),
+            ),
             default => null,
         };
     }

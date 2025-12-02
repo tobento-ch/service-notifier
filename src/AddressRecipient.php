@@ -70,6 +70,9 @@ class AddressRecipient implements RecipientInterface
             str_starts_with($name, 'sms') && $this->address()->smartphone() => new Address\Phone(
                 phone: $this->address()->smartphone(),
             ),
+            str_starts_with($name, 'chat') && $this->address()->meta('channel_addresses.'.$name) => new Address\Dsn(
+                dsn: $this->address()->meta('channel_addresses.'.$name),
+            ),
             default => null,
         };
     }

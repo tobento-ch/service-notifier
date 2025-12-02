@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tobento\Service\Notifier\Test\Symfony;
 
 use PHPUnit\Framework\TestCase;
+use Tobento\Service\Notifier\Symfony\PerRecipientChatChannel;
 use Tobento\Service\Notifier\Symfony\Notification;
 use Symfony\Component\Notifier\Notification\SmsNotificationInterface;
 use Symfony\Component\Notifier\Notification\ChatNotificationInterface;
@@ -47,6 +48,16 @@ class NotificationTest extends TestCase
         
         $this->assertSame($message, $notification->getMessage());
         $this->assertSame($recipient, $notification->getRecipient());
+    }
+    
+    public function testRecipientChannelMethod()
+    {
+        $message = new SmsMessage('44556677', 'Subject');
+        $recipient = new Recipient(phone: '44556677');
+        $channel = new PerRecipientChatChannel();
+        
+        $this->assertSame(null, new Notification(recipient: $recipient, message: $message)->recipientChannel());
+        $this->assertSame($channel, new Notification(recipient: $recipient, message: $message, recipientChannel: $channel)->recipientChannel());
     }
     
     public function testAsSmsMessageMethod()

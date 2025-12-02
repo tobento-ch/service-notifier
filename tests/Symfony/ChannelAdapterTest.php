@@ -14,12 +14,15 @@ declare(strict_types=1);
 namespace Tobento\Service\Notifier\Test\Symfony;
 
 use PHPUnit\Framework\TestCase;
+use Tobento\Service\Notifier\Address;
 use Tobento\Service\Notifier\Symfony\ChannelAdapter;
+use Tobento\Service\Notifier\Symfony\MessageOptions;
+use Tobento\Service\Notifier\Symfony\PerRecipientChatChannel;
 use Tobento\Service\Notifier\ChannelInterface;
 use Tobento\Service\Notifier\Notification;
 use Tobento\Service\Notifier\Recipient;
 use Tobento\Service\Notifier\Message;
-use Tobento\Service\Notifier\Symfony\MessageOptions;
+use Tobento\Service\Notifier\Exception\InvalidAddressException;
 use Tobento\Service\Notifier\Exception\UndefinedAddressException;
 use Symfony\Component\Notifier\Channel\SmsChannel;
 use Symfony\Component\Notifier\Channel\ChatChannel;
@@ -67,6 +70,31 @@ class ChannelAdapterTest extends TestCase
         $this->assertInstanceof(SmsMessage::class, $msg);
         $this->assertSame('Subject', $msg->getSubject());
         $this->assertSame('15556666666', $msg->getPhone());
+        $this->assertSame('', $msg->getFrom());
+    }
+    
+    public function testSendSmsWithCustomMessage()
+    {
+        $adapter = new ChannelAdapter(
+            name: 'sms',
+            channel: new SmsChannel(transport: new NullTransport()),
+            container: new Container(),
+        );
+        
+        $message = new Message\Sms(
+            subject: 'Custom message',
+            from: 'FROM',
+        );
+        
+        $msg = $adapter->send(
+            notification: new Notification('Subject')->addMessage('sms', $message),
+            recipient: new Recipient(phone: '15556666666'),
+        );
+        
+        $this->assertInstanceof(SmsMessage::class, $msg);
+        $this->assertSame('Custom message', $msg->getSubject());
+        $this->assertSame('15556666666', $msg->getPhone());
+        $this->assertSame('FROM', $msg->getFrom());
     }
     
     public function testSendSmsThrowsUndefinedAddressExceptionIfNoAddress()
@@ -114,9 +142,9 @@ class ChannelAdapterTest extends TestCase
             'recipient_id' => 'channel',
         ]);
         
-        $message = (new Message\Chat(
+        $message = new Message\Chat(
             subject: 'Chat message',
-        ))->parameter(new MessageOptions($options));
+        )->parameter(new MessageOptions($options));
         
         $msg = $adapter->send(
             notification: (new Notification('Subject'))->addMessage('chat/slack', $message),
@@ -126,6 +154,75 @@ class ChannelAdapterTest extends TestCase
         $this->assertInstanceof(ChatMessage::class, $msg);
         $this->assertSame('Chat message', $msg->getSubject());
         $this->assertSame($options, $msg->getOptions());
+    }
+    
+    public function testSendChatPerRecipient()
+    {
+        $adapter = new ChannelAdapter(
+            name: 'chat',
+            channel: new PerRecipientChatChannel(),
+            container: new Container(),
+        );
+        
+        $message = new Message\Chat(subject: 'Chat message');
+        
+        $msg = $adapter->send(
+            notification: new Notification('Subject')->addMessage('chat', $message),
+            recipient: new Recipient()->addAddress(
+                channel: 'chat',
+                address: new Address\Dsn('null://null'),
+            ),
+        );
+        
+        $this->assertInstanceof(ChatMessage::class, $msg);
+        $this->assertSame('Chat message', $msg->getSubject());
+    }
+
+    public function testSendChatPerRecipientWillThrowUndefinedAddressExceptionIfNoAddress()
+    {
+        $this->expectException(UndefinedAddressException::class);
+        $this->expectExceptionMessage('Notification Tobento\Service\Notifier\Notification has no address for the channel chat defined');
+        
+        $adapter = new ChannelAdapter(
+            name: 'chat',
+            channel: new PerRecipientChatChannel(),
+            container: new Container(),
+        );
+        
+        $message = new Message\Chat(subject: 'Chat message');
+        
+        $msg = $adapter->send(
+            notification: new Notification('Subject')->addMessage('chat', $message),
+            recipient: new Recipient(),
+        );
+        
+        $this->assertInstanceof(ChatMessage::class, $msg);
+        $this->assertSame('Chat message', $msg->getSubject());
+    }
+    
+    public function testSendChatPerRecipientWillThrowInvalidAddressExceptionIfInvalid()
+    {
+        $this->expectException(InvalidAddressException::class);
+        $this->expectExceptionMessage('Notification Tobento\Service\Notifier\Notification has invalid address for the channel chat defined');
+        
+        $adapter = new ChannelAdapter(
+            name: 'chat',
+            channel: new PerRecipientChatChannel(),
+            container: new Container(),
+        );
+        
+        $message = new Message\Chat(subject: 'Chat message');
+        
+        $msg = $adapter->send(
+            notification: new Notification('Subject')->addMessage('chat', $message),
+            recipient: new Recipient()->addAddress(
+                channel: 'chat',
+                address: new Address\Dsn('slack://TOKEN@default?channel=CHANNEL'),
+            ),
+        );
+        
+        $this->assertInstanceof(ChatMessage::class, $msg);
+        $this->assertSame('Chat message', $msg->getSubject());
     }
     
     public function testSendPush()

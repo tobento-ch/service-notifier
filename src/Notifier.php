@@ -16,8 +16,9 @@ namespace Tobento\Service\Notifier;
 use Tobento\Service\Notifier\Message;
 use Tobento\Service\Notifier\Exception\NotifierException;
 use Tobento\Service\Notifier\Exception\ChannelException;
-use Tobento\Service\Notifier\Exception\UndefinedMessageException;
+use Tobento\Service\Notifier\Exception\InvalidAddressException;
 use Tobento\Service\Notifier\Exception\UndefinedAddressException;
+use Tobento\Service\Notifier\Exception\UndefinedMessageException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Throwable;
 
@@ -75,7 +76,7 @@ class Notifier implements NotifierInterface
                 try {
                     $message = $channel->send($notification, $recipient);
                     $messages->add(new ChannelMessage($channel->name(), $message));
-                } catch (UndefinedMessageException|UndefinedAddressException $e) {
+                } catch (UndefinedMessageException|UndefinedAddressException|InvalidAddressException $e) {
                     // ignore as notification or recipient may not support that channel.
                     $messages->add(new ChannelMessage($channel->name(), null, $e));
                 } catch (Throwable $e) {

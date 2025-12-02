@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Tobento\Service\Notifier\Test;
 
 use PHPUnit\Framework\TestCase;
+use Tobento\Service\Notifier\Address;
 use Tobento\Service\Notifier\Notifier;
 use Tobento\Service\Notifier\NotifierInterface;
 use Tobento\Service\Notifier\Channels;
@@ -23,12 +24,14 @@ use Tobento\Service\Notifier\NotificationInterface;
 use Tobento\Service\Notifier\Notification;
 use Tobento\Service\Notifier\RecipientInterface;
 use Tobento\Service\Notifier\Recipient;
+use Tobento\Service\Notifier\Symfony;
 use Tobento\Service\Notifier\ChannelMessagesInterface;
 use Tobento\Service\Notifier\Mail;
 use Tobento\Service\Notifier\Parameter;
 use Tobento\Service\Notifier\Event;
 use Tobento\Service\Notifier\QueueHandlerInterface;
 use Tobento\Service\Notifier\Exception\NotifierException;
+use Tobento\Service\Notifier\Exception\InvalidAddressException;
 use Tobento\Service\Notifier\Exception\UndefinedAddressException;
 use Tobento\Service\Mail\NullMailer;
 use Tobento\Service\Container\Container;
@@ -126,6 +129,36 @@ class NotifierTest extends TestCase
         $this->assertSame($notification, $recipientMessages->notification());
         $this->assertSame($recipient, $recipientMessages->recipient());
         $this->assertInstanceof(UndefinedAddressException::class, $recipientMessages->get('mail')?->exception());
+    }
+    
+    public function testSendIgnoresInvalidAddressAndMessageException()
+    {
+        $notifier = new Notifier(channels: new Channels(
+            new Symfony\ChannelAdapter(
+                name: 'chat',
+                channel: new Symfony\PerRecipientChatChannel(),
+                container: new Container(),
+            ),
+        ));
+        
+        $notification = new Notification('Subject');
+        $recipient = new Recipient()->addAddress(
+            channel: 'chat',
+            address: new Address\Dsn('slack://TOKEN@default?channel=CHANNEL'),
+        );
+        
+        $recipientsMessages = $notifier->send(
+            notification: $notification,
+            recipient: $recipient,
+        );
+        
+        $recipientMessages = $recipientsMessages[0];
+        
+        $this->assertInstanceof(ChannelMessagesInterface::class, $recipientMessages);
+        $this->assertSame(1, $recipientMessages->count());
+        $this->assertSame($notification, $recipientMessages->notification());
+        $this->assertSame($recipient, $recipientMessages->recipient());
+        $this->assertInstanceof(InvalidAddressException::class, $recipientMessages->get('chat')?->exception());
     }
     
     public function testThrowsNotifierExceptionIfSetupFailure()

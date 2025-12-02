@@ -1,6 +1,6 @@
 {
     "name": "tobento/service-notifier",
-    "version": "2.0",
+    "version": "2.0.1",
     "type": "library",
     "description": "Notifier interface for PHP applications.",
     "keywords": [
@@ -46,9 +46,11 @@
         "tobento/service-repository-storage": "^2.0",
         "tobento/service-migration": "^2.0",
         "tobento/service-user": "^2.0",
+        "symfony/fake-chat-notifier": "^7.3",
         "symfony/vonage-notifier": "^7.3",
         "symfony/slack-notifier": "^7.3",
-        "symfony/one-signal-notifier": "^7.3"
+        "symfony/one-signal-notifier": "^7.3",
+        "monolog/monolog": "^3.9"
     },
     "autoload": {
         "psr-4": {

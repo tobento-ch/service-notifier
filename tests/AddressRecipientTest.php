@@ -46,6 +46,18 @@ class AddressRecipientTest extends TestCase
         $this->assertSame('foo@example.com', $address->email());
     }
     
+    public function testGetAddressForChannelMethodReturnsChatAddressIfSpecified()
+    {
+        $recipient = new AddressRecipient(
+            new UserAddr(key: 'primary', meta: ['channel_addresses' => ['chat/slack' => 'slack://TOKEN@default?channel=CHANNEL']])
+        );
+        $notification = new Notification('Subject');
+        $address = $recipient->getAddressForChannel(name: 'chat/slack', notification: $notification);
+        
+        $this->assertInstanceof(Address\Dsn::class, $address);
+        $this->assertSame('slack://TOKEN@default?channel=CHANNEL', $address->dsn());
+    }
+    
     public function testGetAddressForChannelMethodReturnsPhoneAddress()
     {
         $recipient = new AddressRecipient(new UserAddr(key: 'primary', smartphone: '554466'));

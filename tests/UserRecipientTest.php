@@ -57,6 +57,18 @@ class UserRecipientTest extends TestCase
         $this->assertSame('554466', $address->phone());
     }
     
+    public function testGetAddressForChannelMethodReturnsChatAddressIfSpecified()
+    {
+        $recipient = new UserRecipient(
+            new User(meta: ['channel_addresses' => ['chat/slack' => 'slack://TOKEN@default?channel=CHANNEL']])
+        );
+        $notification = new Notification('Subject');
+        $address = $recipient->getAddressForChannel(name: 'chat/slack', notification: $notification);
+        
+        $this->assertInstanceof(Address\Dsn::class, $address);
+        $this->assertSame('slack://TOKEN@default?channel=CHANNEL', $address->dsn());
+    }
+    
     public function testGetChannelsMethod()
     {
         $recipient = new UserRecipient(new User());

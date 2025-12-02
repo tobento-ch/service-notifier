@@ -31,6 +31,7 @@ Notifier interface for PHP applications using [Symfony Notifier](https://github.
         - [Chat Channel](#chat-channel)
             - [Chat Notification](#chat-notification)
             - [Chat Recipient](#chat-recipient)
+            - [Chat Channel Per Recipient](#chat-channel-per-recipient)
         - [Push Channel](#push-channel)
             - [Push Notification](#push-notification)
             - [Push Recipient](#push-recipient)
@@ -251,10 +252,21 @@ The ```AddressRecipient::class``` may be used if you have installed the [User Se
 
 ```php
 use Tobento\Service\Notifier\AddressRecipient;
-use Tobento\Service\User\AddressInterface;
+use Tobento\Service\User\Address;
 
 $recipient = new AddressRecipient(
-    address: $address, // AddressInterface
+    address: new Address(
+        key: 'primary',
+        email: 'john@example.com',
+        smartphone: '+111222333444',
+        
+        // you may define chat channel addresses:
+        meta: [
+            'channel_addresses' => [
+                'chat/slack' => 'slack://TOKEN@default?channel=CHANNEL',
+            ],
+        ],
+    ),
     channels: [],
 );
 ```
@@ -265,10 +277,20 @@ The ```UserRecipient::class``` may be used if you have installed the [User Servi
 
 ```php
 use Tobento\Service\Notifier\UserRecipient;
-use Tobento\Service\User\UserInterface;
+use Tobento\Service\User\User;
 
 $recipient = new UserRecipient(
-    user: $user, // UserInterface
+    user: new User(
+        email: 'john@example.com',
+        smartphone: '+111222333444',
+        
+        // you may define chat channel addresses:
+        meta: [
+            'channel_addresses' => [
+                'chat/slack' => 'slack://TOKEN@default?channel=CHANNEL',
+            ],
+        ],
+    ),
     channels: [],
 );
 ```
@@ -479,6 +501,9 @@ class SampleNotification extends AbstractNotification implements Message\ToSms
     {
         return new Message\Sms(
             subject: 'Sms message',
+            
+            // optionally, you can override default "from" defined in channel
+            from: '+1422222222',            
         );
         
         // you may set a specific to address:
@@ -669,6 +694,52 @@ class SampleNotification extends AbstractNotification implements Message\ToChat
         );
     }
 }
+```
+
+#### Chat Channel Per Recipient
+
+When delivering notifications through the chat channel, you can assign a dedicated chat address to each recipient:
+
+```php
+use Tobento\Service\Notifier\Recipient;
+use Tobento\Service\Notifier\Address;
+use Tobento\Service\Notifier\Notification;
+
+$recipient = new Recipient()
+    ->addAddress(
+        channel: 'chat/slack',
+        address: new Address\Dsn('slack://TOKEN@default?channel=CHANNEL'),
+    );
+
+$address = $recipient->getAddressForChannel('chat/slack', new Notification('subject'));
+
+var_dump($address);
+// object(Tobento\Service\Notifier\Address\Dsn)#16 (2) { ["dsn":protected]=> string(37) "slack://TOKEN@default?channel=CHANNEL" ["name":protected]=> NULL }
+```
+
+**Channel Configuration**
+
+You can configure the ```PerRecipientChatChannel::class``` to ensure that a message is only sent if the recipient has a chat address defined. If no address exists, you may specify an alternative chat channel to handle delivery:
+
+```php
+use Tobento\Service\Notifier\Symfony\ChannelAdapter;
+use Tobento\Service\Notifier\Symfony\PerRecipientChatChannel;
+use Tobento\Service\Notifier\ChannelInterface;
+use Psr\Container\ContainerInterface;
+
+$channel = new ChannelAdapter(
+    name: 'chat/slack',
+    channel: new PerRecipientChatChannel(),
+    /*channel: new \Symfony\Component\Notifier\Channel\ChatChannel(
+        transport: new \Symfony\Component\Notifier\Bridge\Slack\SlackTransport(
+            accessToken: '******',
+        )
+    ),*/
+    container: $container, // ContainerInterface
+);
+
+var_dump($channel instanceof ChannelInterface);
+// bool(true)
 ```
 
 ### Push Channel

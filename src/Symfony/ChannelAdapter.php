@@ -13,27 +13,29 @@ declare(strict_types=1);
 
 namespace Tobento\Service\Notifier\Symfony;
 
-use Tobento\Service\Notifier\ChannelInterface;
-use Tobento\Service\Notifier\NotificationInterface;
-use Tobento\Service\Notifier\RecipientInterface;
-use Tobento\Service\Notifier\Message;
-use Tobento\Service\Notifier\Address;
-use Tobento\Service\Notifier\Exception\ChannelException;
-use Tobento\Service\Notifier\Exception\UndefinedMessageException;
-use Tobento\Service\Notifier\Exception\UndefinedAddressException;
+use Exception;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\Notifier\Channel\ChannelInterface as SymfonyChannelInterface;
 use Symfony\Component\Notifier\Channel\ChatChannel;
-use Symfony\Component\Notifier\Message\ChatMessage;
 use Symfony\Component\Notifier\Channel\PushChannel;
-use Symfony\Component\Notifier\Message\PushMessage;
 use Symfony\Component\Notifier\Channel\SmsChannel;
+use Symfony\Component\Notifier\Message\ChatMessage;
+use Symfony\Component\Notifier\Message\PushMessage;
 use Symfony\Component\Notifier\Message\SmsMessage;
-use Symfony\Component\Notifier\Recipient\RecipientInterface as SymfonyRecipientInterface;
-use Symfony\Component\Notifier\Recipient\Recipient;
 use Symfony\Component\Notifier\Recipient\NoRecipient;
+use Symfony\Component\Notifier\Recipient\Recipient;
+use Symfony\Component\Notifier\Recipient\RecipientInterface as SymfonyRecipientInterface;
 use Tobento\Service\Autowire\Autowire;
-use Psr\Container\ContainerInterface;
-use Exception;
+use Tobento\Service\Notifier\Address;
+use Tobento\Service\Notifier\ChannelInterface;
+use Tobento\Service\Notifier\Exception\ChannelException;
+use Tobento\Service\Notifier\Exception\InvalidAddressException;
+use Tobento\Service\Notifier\Exception\UndefinedAddressException;
+use Tobento\Service\Notifier\Exception\UndefinedMessageException;
+use Tobento\Service\Notifier\Message;
+use Tobento\Service\Notifier\NotificationInterface;
+use Tobento\Service\Notifier\RecipientInterface;
+use Throwable;
 
 /**
  * ChannelAdapter
@@ -87,8 +89,10 @@ class ChannelAdapter implements ChannelInterface
     {
         $notification = $this->createSymfonyNotification($notification, $recipient);
         
+        $channel = $notification->recipientChannel() ?: $this->channel();
+        
         try {
-            $this->channel->notify($notification, $notification->getRecipient());
+            $channel->notify($notification, $notification->getRecipient());
             return $notification->getMessage();
         } catch (ChannelException $e) {
             throw $e;
@@ -114,15 +118,17 @@ class ChannelAdapter implements ChannelInterface
         RecipientInterface $recipient
     ): Notification {
         switch (true) {
-            case $this->channel instanceof SmsChannel:
+            case $this->channel() instanceof SmsChannel:
                 return $this->createSmsNotification($notification, $recipient);
-            case $this->channel instanceof ChatChannel:
+            case $this->channel() instanceof ChatChannel:
                 return $this->createChatNotification($notification, $recipient);
-            case $this->channel instanceof PushChannel:
+            case $this->channel() instanceof PerRecipientChatChannel:
+                return $this->createChatNotification($notification, $recipient);
+            case $this->channel() instanceof PushChannel:
                 return $this->createPushNotification($notification, $recipient);
         }
         
-        throw new ChannelException(sprintf('Symfony channel %s is not supported', $this->channel::class));
+        throw new ChannelException(sprintf('Symfony channel %s is not supported', $this->channel()::class));
     }
     
     /**
@@ -141,7 +147,7 @@ class ChannelAdapter implements ChannelInterface
             throw new UndefinedMessageException($this->name(), $notification, $recipient);
         }
         
-        $message = (new Autowire($this->container))->call(
+        $message = new Autowire($this->container)->call(
             $notification->toSmsHandler(),
             ['recipient' => $recipient, 'channel' => $this->name()]
         );
@@ -165,19 +171,18 @@ class ChannelAdapter implements ChannelInterface
             $message->to($address);
         }
         
-        /*
-        // for next version:
         $from = '';
+        
         if ($message->getFrom()) {
             $from = $message->getFrom()->name() ?: $message->getFrom()->phone();
-        }*/
+        }
         
         return new Notification(
             recipient: new Recipient(phone: $message->getTo()->phone()),
             message: new SmsMessage(
                 phone: $message->getTo()->phone(),
                 subject: $message->getSubject(),
-                // from: $from, // since version: 6.3
+                from: $from,
             ),
         );
     }
@@ -198,7 +203,7 @@ class ChannelAdapter implements ChannelInterface
             throw new UndefinedMessageException($this->name(), $notification, $recipient);
         }
         
-        $message = (new Autowire($this->container))->call(
+        $message = new Autowire($this->container)->call(
             $notification->toChatHandler(),
             ['recipient' => $recipient, 'channel' => $this->name()]
         );
@@ -212,12 +217,45 @@ class ChannelAdapter implements ChannelInterface
             );
         }
         
+        $recipientChannel = null;
+        
+        $address = $recipient->getAddressForChannel(name: $this->name(), notification: $notification);
+        
+        // per recipient channel:
+        if ($address instanceof Address\DsnInterface) {
+            try {
+                $channel = new ChannelFactory(container: $this->container)->createChannel(
+                    name: $this->name(),
+                    config: [
+                        'dsn' => $address->dsn(),
+                        'channel' => \Symfony\Component\Notifier\Channel\ChatChannel::class,
+                    ],
+                );
+            } catch (Throwable $e) {
+                throw new InvalidAddressException(
+                    channel: $this->name(),
+                    notification: $notification,
+                    recipient: $recipient,
+                    previous: $e,
+                );
+            }
+
+            if ($channel instanceof ChannelAdapter) {
+                $recipientChannel = $channel->channel();
+            }
+        }
+
+        if ($this->channel() instanceof PerRecipientChatChannel && is_null($recipientChannel)) {
+            throw new UndefinedAddressException($this->name(), $notification, $recipient);
+        }
+        
         return new Notification(
             recipient: new NoRecipient(),
             message: new ChatMessage(
                 subject: $message->getSubject(),
                 options: $message->parameters()->name(MessageOptions::class)->first()?->getOptions(),
             ),
+            recipientChannel: $recipientChannel,
         );
     }
     

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Tobento\Service\Notifier\Symfony;
 
+use Symfony\Component\Notifier\Channel\ChannelInterface as SymfonyChannelInterface;
 use Symfony\Component\Notifier\Notification\Notification as SymfonyNotification;
 use Symfony\Component\Notifier\Notification\SmsNotificationInterface;
 use Symfony\Component\Notifier\Notification\ChatNotificationInterface;
@@ -37,10 +38,12 @@ class Notification extends SymfonyNotification implements
      *
      * @param RecipientInterface $recipient
      * @param MessageInterface $message
+     * @param null|SymfonyChannelInterface $recipientChannel
      */
     public function __construct(
         protected RecipientInterface $recipient,
         protected MessageInterface $message,
+        protected null|SymfonyChannelInterface $recipientChannel = null,
     ) {}
     
     public function getRecipient(): RecipientInterface
@@ -51,6 +54,11 @@ class Notification extends SymfonyNotification implements
     public function getMessage(): MessageInterface
     {
         return $this->message;
+    }
+        
+    public function recipientChannel(): null|SymfonyChannelInterface
+    {
+        return $this->recipientChannel;
     }
     
     public function asSmsMessage(SmsRecipientInterface $recipient, null|string $transport = null): ?SmsMessage

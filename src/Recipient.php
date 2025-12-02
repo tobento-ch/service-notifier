@@ -29,9 +29,9 @@ class Recipient implements RecipientInterface
     protected array $addresses = [];
     
     /**
-     * @var string
+     * @var array<array-key, string>
      */
-    protected string $channelSeparator = '/';
+    protected array $rootChannelNames = ['mail', 'sms', 'chat', 'storage', 'push'];
     
     /**
      * Create a new Recipient.
@@ -90,11 +90,9 @@ class Recipient implements RecipientInterface
             return $this->addresses[$name];
         }
         
-        $channelRoot = explode($this->channelSeparator, $name)[0];
-        
-        foreach($this->addresses as $channelName => $address) {
-            if (str_starts_with($channelName, $channelRoot)) {
-                return $address;
+        foreach($this->rootChannelNames as $channelRoot) {
+            if (str_starts_with($name, $channelRoot) && array_key_exists($channelRoot, $this->addresses)) {
+                return $this->addresses[$channelRoot];
             }
         }
         

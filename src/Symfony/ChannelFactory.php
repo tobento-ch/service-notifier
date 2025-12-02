@@ -73,7 +73,7 @@ class ChannelFactory implements ChannelFactoryInterface
         }
         
         try {
-            $channel = (new Autowire($this->container))->resolve($config['channel'], ['transport' => $transport]);
+            $channel = new Autowire($this->container)->resolve($config['channel'], ['transport' => $transport]);
         } catch (AutowireException $e) {
             throw new ChannelCreateException(
                 name: $name,

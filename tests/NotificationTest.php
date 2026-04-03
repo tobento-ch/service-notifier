@@ -80,6 +80,7 @@ class NotificationTest extends TestCase
         $this->assertInstanceof(Message\ToStorage::class, $notification);
         $this->assertInstanceof(Message\ToChat::class, $notification);
         $this->assertInstanceof(Message\ToPush::class, $notification);
+        $this->assertInstanceof(Message\ToBrowser::class, $notification);
     }
     
     public function testToMailMethod()
@@ -226,5 +227,33 @@ class NotificationTest extends TestCase
         $msg = $notification->toPush(recipient: new Recipient(), channel: 'push');
         
         $this->assertSame('Lorem', $msg->getSubject());
+    }
+    
+    public function testToBrowserMethod()
+    {        
+        $notification = new Notification(subject: 'Subject', content: 'Content');
+        
+        $msg = $notification->toBrowser(recipient: new Recipient(), channel: 'browser');
+        
+        $this->assertSame(['subject' => 'Subject', 'content' => 'Content'], $msg->getData());
+    }
+    
+    public function testToBrowserMethodWithSpecificChannel()
+    {        
+        $notification = new Notification(subject: 'Subject', content: 'Content');
+        
+        $msg = $notification->toBrowser(recipient: new Recipient(), channel: 'browser/foo');
+        
+        $this->assertSame(['subject' => 'Subject', 'content' => 'Content'], $msg->getData());
+    }
+    
+    public function testToBrowserMethodUsesSpecificMessage()
+    {        
+        $notification = (new Notification(subject: 'Subject', content: 'Content'))
+            ->addMessage('browser', new Message\Browser(['key' => 'value']));
+        
+        $msg = $notification->toBrowser(recipient: new Recipient(), channel: 'browser');
+        
+        $this->assertSame(['key' => 'value'], $msg->getData());
     }
 }

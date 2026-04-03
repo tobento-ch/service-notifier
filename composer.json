@@ -1,6 +1,6 @@
 {
     "name": "tobento/service-notifier",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "type": "library",
     "description": "Notifier interface for PHP applications.",
     "keywords": [

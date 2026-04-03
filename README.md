@@ -39,6 +39,10 @@ Notifier interface for PHP applications using [Symfony Notifier](https://github.
             - [Storage Notification](#storage-notification)
             - [Storage Recipient](#storage-recipient)
             - [Accessing Storage Notifications](#accessing-storage-notifications)
+        - [Browser Channel](#browser-channel)
+            - [Browser Notification](#browser-notification)
+            - [Browser Recipient](#browser-recipient)
+            - [Accessing Browser Notifications](#accessing-browser-notifications)
     - [Channels](#channels)
         - [Default Channels](#default-channels)
         - [Lazy Channels](#lazy-channels)
@@ -926,9 +930,9 @@ The storage needs to have the following table columns:
 
 **Storage Repository**
 
-You may use the provided ```StorageRepository::class``` as repository implementation:
+You may use the provided `StorageRepository::class` as the repository implementation for storing notifications.
 
-You will need to install the service:
+To use it, install the storage repository service:
 
 ```composer require tobento/service-repository-storage```
 
@@ -941,7 +945,7 @@ use Psr\Container\ContainerInterface;
 
 $channel = new Storage\Channel(
     name: 'storage/database',
-    repository: new StorageRepository(
+    repository: new Storage\StorageRepository(
         storage: $storage, // StorageInterface
         table: 'notifications',
     ),
@@ -951,7 +955,7 @@ $channel = new Storage\Channel(
 
 Check out the [Storage Service - Storages](https://github.com/tobento-ch/service-storage#storages) for the available storages.
 
-Check out the [Repository Storage Service](https://github.com/tobento-ch/service-repository-storage) to learn more about it in general.
+For more details about repository usage, see the [Repository Storage Service](https://github.com/tobento-ch/service-repository-storage).
 
 #### Storage Notification
 
@@ -959,7 +963,16 @@ To send Storage notifications you have multiple options:
 
 **Using the [Abstract Notification](#abstract-notification)**
 
-Simply extend from the ```AbstractNotification::class``` and implement the ```ToStorage``` interface. The interface requires a ```toStorageHandler``` method which is already added on the ```AbstractNotification::class``` defining the ```toStorage``` method as the message handler. You will just need to add the ```toStorage``` method which will receive a ```$recipient``` entity, the ```$channel``` name and you may request any service being resolved (autowired) by the container.
+Extend the `AbstractNotification::class` and implement the `ToStorage` interface.  
+The interface requires a `toStorageHandler` method, which is already provided by `AbstractNotification`.
+
+You only need to implement the `toStorage` method, which receives:
+
+- the `$recipient` entity  
+- the `$channel` name  
+- any autowired services you need  
+
+This method must return a `Message\StorageInterface` instance.
 
 ```php
 use Tobento\Service\Notifier\AbstractNotification;
@@ -1004,10 +1017,11 @@ $notification = new Notification()
 
 #### Storage Recipient
 
-When sending notifications via the storage channel, the channel will store the ```$recipient->getId()``` and ```$recipient->getType()``` values which you can later use to fetch notifications:
+When sending notifications via the Storage Channel, the channel stores the recipient information using the values returned by `$recipient->getId()` and `$recipient->getType()`.  
+These values allow you to later fetch or filter notifications for any recipient type your application defines, such as users, system entities, or custom recipient groups.
 
 ```php
-// channel will store on sending:
+// The channel stores the following data when sending:
 $repository->create([
     'name' => $notification->getName(),
     'recipient_id' => $recipient->getId(),
@@ -1024,6 +1038,157 @@ Once notifications are stored, you can retrieve the notifications using the repo
 
 ```php
 $channel = $channels->get(name: 'storage/database');
+
+$entities = $channel->repository()->findAll(where: [
+    'recipient_id' => $userId,
+    //'recipient_type' => 'user',
+]);
+```
+
+### Browser Channel
+
+The Browser Channel stores notification messages in the configured repository so they can later be delivered to the browser (for example via SSE).
+
+```php
+use Tobento\Service\Notifier\Browser;
+use Tobento\Service\Notifier\ChannelInterface;
+use Tobento\Service\Repository\RepositoryInterface;
+use Psr\Container\ContainerInterface;
+
+$channel = new Browser\Channel(
+    name: 'browser/database',
+    repository: $repository, // RepositoryInterface
+    container: $container, // ContainerInterface
+);
+
+var_dump($channel instanceof ChannelInterface);
+// bool(true)
+```
+
+Check out the [Repository Service](https://github.com/tobento-ch/service-repository) to learn more about it.
+
+The storage needs to have the following table columns:
+
+| Column | Type | Description |
+| --- | --- | --- |
+| ```id``` | bigint(21) primary key | - |
+| ```name``` | varchar(255) | Used to store the notification name |
+| ```recipient_id``` | varchar(36) | Used to store the recipient id |
+| ```recipient_type``` | varchar(255) | Used to store the recipient type |
+| ```data``` | json | Used to store the message data |
+| ```read_at``` | datetime | Used to store date read at |
+| ```created_at``` | datetime | Used to store date created at |
+
+**Browser Repository**
+
+You may use the provided `StorageRepository::class` as the repository implementation for storing browser notifications.
+
+To use it, install the storage repository service:
+
+```composer require tobento/service-repository-storage```
+
+```php
+use Tobento\Service\Notifier\Browser;
+use Tobento\Service\Notifier\ChannelInterface;
+use Tobento\Service\Repository\RepositoryInterface;
+use Tobento\Service\Storage\StorageInterface;
+use Psr\Container\ContainerInterface;
+
+$channel = new Browser\Channel(
+    name: 'browser/database',
+    repository: new Browser\StorageRepository(
+        storage: $storage, // StorageInterface
+        table: 'browser_notifications',
+    ),
+    container: $container, // ContainerInterface
+);
+```
+
+Check out the [Storage Service - Storages](https://github.com/tobento-ch/service-storage#storages) for the available storages.
+
+For more details about repository usage, see the [Repository Storage Service](https://github.com/tobento-ch/service-repository-storage).
+
+#### Browser Notification
+
+To send Browser notifications you have multiple options.
+
+**Using the [Abstract Notification](#abstract-notification)**
+
+Extend the `AbstractNotification::class` and implement the `ToBrowser` interface.  
+The interface requires a `toBrowserHandler` method, which is already provided by `AbstractNotification`.
+
+You only need to implement the `toBrowser` method, which receives:
+
+- the `$recipient` entity  
+- the `$channel` name  
+- any autowired services you need  
+
+This method must return a `Message\BrowserInterface` instance.
+
+```php
+use Tobento\Service\Notifier\AbstractNotification;
+use Tobento\Service\Notifier\RecipientInterface;
+use Tobento\Service\Notifier\Message;
+
+class SampleNotification extends AbstractNotification implements Message\ToBrowser
+{
+    /**
+     * Returns the browser message.
+     *
+     * @param RecipientInterface $recipient
+     * @param string $channel The channel name.
+     * @return Message\BrowserInterface
+     */
+    public function toBrowser(RecipientInterface $recipient, string $channel): Message\BrowserInterface
+    {
+        return new Message\Browser(data: [
+            'order_id' => $this->order->id,
+        ]);
+    }
+}
+```
+
+**Using the [Notification](#notification)**
+
+```php
+use Tobento\Service\Notifier\Notification;
+use Tobento\Service\Notifier\Message;
+
+$notification = new Notification(
+    subject: 'New Invoice',
+    content: 'You got a new invoice for 15 EUR.',
+);
+    
+// with specific browser message:
+$notification = new Notification()
+    ->addMessage('browser', new Message\Browser([
+        'foo' => 'bar',
+    ]));
+```
+
+#### Browser Recipient
+
+When sending notifications via the Browser Channel, the channel stores the recipient information using the values returned by `$recipient->getId()` and `$recipient->getType()`.  
+These values allow you to later fetch or filter notifications for a specific user, guest, browser ID, or any other recipient type your application defines.
+
+```php
+// The channel stores the following data when sending:
+$repository->create([
+    'name' => $notification->getName(),
+    'recipient_id' => $recipient->getId(),
+    'recipient_type' => $recipient->getType(),
+    'data' => $message->getData(),
+    'read_at' => null,
+    'created_at' => null,
+]);
+```
+
+#### Accessing Browser Notifications
+
+Once notifications are stored, you can retrieve them using the repository provided by the channel:
+
+```php
+$channel = $channels->get(name: 'browser/database');
 
 $entities = $channel->repository()->findAll(where: [
     'recipient_id' => $userId,

@@ -31,7 +31,7 @@ class Recipient implements RecipientInterface
     /**
      * @var array<array-key, string>
      */
-    protected array $rootChannelNames = ['mail', 'sms', 'chat', 'storage', 'push'];
+    protected array $rootChannelNames = ['mail', 'sms', 'chat', 'storage', 'push', 'browser'];
     
     /**
      * Create a new Recipient.

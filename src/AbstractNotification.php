@@ -141,4 +141,16 @@ abstract class AbstractNotification implements NotificationInterface
     {
         return [$this, 'toPush'];
     }
+    
+    /**
+     * Returns the browser handler creating the browser message.
+     *
+     * @return callable
+     * @psalm-suppress InvalidReturnStatement
+     * @psalm-suppress InvalidReturnType
+     */
+    public function toBrowserHandler(): callable
+    {
+        return [$this, 'toBrowser'];
+    }
 }

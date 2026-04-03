@@ -23,7 +23,8 @@ class Notification extends AbstractNotification implements
     Message\ToSms,
     Message\ToStorage,
     Message\ToChat,
-    Message\ToPush
+    Message\ToPush,
+    Message\ToBrowser
 {
     /**
      * @var string
@@ -214,6 +215,27 @@ class Notification extends AbstractNotification implements
             subject: $this->subject,
             content: $this->content,
         );
+    }
+        
+    /**
+     * Returns the browser message.
+     *
+     * @param RecipientInterface $recipient
+     * @param string $channel The channel name.
+     * @return Message\BrowserInterface
+     */
+    public function toBrowser(RecipientInterface $recipient, string $channel): Message\BrowserInterface
+    {
+        $message = $this->getMessageFor(channel: $channel, channelRoot: 'browser');
+        
+        if ($message instanceof Message\BrowserInterface) {
+            return $message;
+        }
+
+        return new Message\Browser(data: [
+            'subject' => $this->subject,
+            'content' => $this->content,
+        ]);
     }
     
     /**

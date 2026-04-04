@@ -19,6 +19,7 @@ Notifier interface for PHP applications using [Symfony Notifier](https://github.
         - [Recipient](#recipient)
         - [Address Recipient](#address-recipient)
         - [User Recipient](#user-recipient)
+        - [Guest Recipient](#guest-recipient)
         - [Composite Recipient](#composite-recipient)
     - [Channel](#channel)
         - [Mail Channel](#mail-channel)
@@ -298,6 +299,49 @@ $recipient = new UserRecipient(
     channels: [],
 );
 ```
+
+### Guest Recipient
+
+The ```GuestRecipient::class``` represents a recipient that does not necessarily have a persistent user identity.
+
+It is useful for scenarios such as:
+- anonymous visitors
+- temporary browser sessions
+- browser-specific identifiers (cookie, session, token, etc.)
+- broadcast-style notifications
+- any custom identification strategy your application defines
+
+Guest recipients behave like any other recipient but offer additional flexibility for browser-based or temporary notification delivery.
+
+```php
+use Tobento\Service\Notifier\GuestRecipient;
+use DateInterval;
+
+// Guest recipient example
+$recipient = new GuestRecipient(
+    id: null, 
+    // or:
+    // id: 'unique-id', // e.g. cookie, session, token, etc.
+
+    // Expiration (optional):
+    expiresAfter: 3600, // seconds
+    // or:
+    // expiresAfter: new DateInterval('PT2H'),
+
+    // Preferred locale (optional, default: 'en'):
+    locale: 'en',
+
+    // Preferred channels (optional):
+    channels: ['browser/database'],
+);
+```
+
+The `id` may be:
+- `null` - meaning the notification is not tied to a specific user
+- a string or integer - if your application assigns a temporary or custom identifier
+
+The Notifier does not enforce a specific meaning for the ID.  
+You are free to choose how guests are identified in your application.
 
 ### Composite Recipient
 
@@ -1050,14 +1094,16 @@ $entities = $channel->repository()->findAll(where: [
 The Browser Channel stores notification messages in the configured repository so they can later be delivered to the browser (for example via SSE).
 
 ```php
+use Psr\Clock\ClockInterface;
+use Psr\Container\ContainerInterface;
 use Tobento\Service\Notifier\Browser;
 use Tobento\Service\Notifier\ChannelInterface;
 use Tobento\Service\Repository\RepositoryInterface;
-use Psr\Container\ContainerInterface;
 
 $channel = new Browser\Channel(
     name: 'browser/database',
     repository: $repository, // RepositoryInterface
+    clock: $clock, // ClockInterface
     container: $container, // ContainerInterface
 );
 
@@ -1076,6 +1122,7 @@ The storage needs to have the following table columns:
 | ```recipient_id``` | varchar(36) | Used to store the recipient id |
 | ```recipient_type``` | varchar(255) | Used to store the recipient type |
 | ```data``` | json | Used to store the message data |
+| ```expires_at``` | datetime | Stores the exact date and time when the notification becomes invalid and should no longer be shown to the recipient. |
 | ```read_at``` | datetime | Used to store date read at |
 | ```created_at``` | datetime | Used to store date created at |
 
@@ -1088,11 +1135,12 @@ To use it, install the storage repository service:
 ```composer require tobento/service-repository-storage```
 
 ```php
+use Psr\Clock\ClockInterface;
+use Psr\Container\ContainerInterface;
 use Tobento\Service\Notifier\Browser;
 use Tobento\Service\Notifier\ChannelInterface;
 use Tobento\Service\Repository\RepositoryInterface;
 use Tobento\Service\Storage\StorageInterface;
-use Psr\Container\ContainerInterface;
 
 $channel = new Browser\Channel(
     name: 'browser/database',
@@ -1100,6 +1148,7 @@ $channel = new Browser\Channel(
         storage: $storage, // StorageInterface
         table: 'browser_notifications',
     ),
+    clock: $clock, // ClockInterface
     container: $container, // ContainerInterface
 );
 ```
@@ -1178,10 +1227,31 @@ $repository->create([
     'recipient_id' => $recipient->getId(),
     'recipient_type' => $recipient->getType(),
     'data' => $message->getData(),
+    'expires_at' => null,
     'read_at' => null,
     'created_at' => null,
 ]);
 ```
+
+**GuestRecipient**
+
+A GuestRecipient may be used when sending notifications to anonymous or temporary browser recipients.  
+If the recipient is a `GuestRecipient` and defines an `expiresAfter` value (either an integer in seconds or a `DateInterval`), the Browser Channel will automatically calculate and store the `expires_at` timestamp using the injected `ClockInterface`.
+
+```php
+use Tobento\Service\Notifier\GuestRecipient;
+
+// Guest recipient with 1-hour expiration
+$recipient = new GuestRecipient(
+    id: null,
+    expiresAfter: 3600,
+);
+```
+
+When the `id` is `null`, the notification is not tied to a specific user.
+How this is interpreted is up to your application. For example, you may use it for broadcast-style notifications or identify the browser using a cookie or session value.
+
+For more detail see the [Guest Recipient](#guest-recipient) section.
 
 #### Accessing Browser Notifications
 

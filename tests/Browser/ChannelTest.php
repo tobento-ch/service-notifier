@@ -13,10 +13,13 @@ declare(strict_types=1);
 
 namespace Tobento\Service\Notifier\Test\Browser;
 
+use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
+use Tobento\Service\Clock\FrozenClock;
 use Tobento\Service\Notifier\Browser\Channel;
 use Tobento\Service\Notifier\Browser\StorageRepository;
 use Tobento\Service\Notifier\ChannelInterface;
+use Tobento\Service\Notifier\GuestRecipient;
 use Tobento\Service\Notifier\Notification;
 use Tobento\Service\Notifier\Recipient;
 use Tobento\Service\Notifier\Message;
@@ -36,6 +39,7 @@ class ChannelTest extends TestCase
                 storage: new  InMemoryStorage(items: []),
                 table: 'notifications',
             ),
+            clock: new FrozenClock(),
             container: new Container(),
         );
     }
@@ -117,9 +121,88 @@ class ChannelTest extends TestCase
         $channel = new Channel(
             name: 'browser',
             repository: $repository,
+            clock: new FrozenClock(),
             container: new Container(),
         );
         
         $this->assertSame($repository, $channel->repository());
+    }
+    
+    public function testGuestRecipientDoesNotRequireId()
+    {
+        $channel = $this->createChannel();
+
+        $notification = new Notification('Subject');
+        $recipient = new GuestRecipient(id: null);
+
+        $message = $channel->send(notification: $notification, recipient: $recipient);
+
+        $this->assertSame(1, $channel->repository()->count());
+        $this->assertNull($message->get('recipient_id'));
+    }
+    
+    public function testGuestRecipientExpiresAfterInt()
+    {
+        $clock = new FrozenClock(new DateTimeImmutable('2026-01-01 12:00:00'));
+
+        $channel = new Channel(
+            name: 'browser',
+            repository: new StorageRepository(
+                storage: new InMemoryStorage(items: []),
+                table: 'notifications',
+            ),
+            clock: $clock,
+            container: new Container(),
+        );
+
+        $notification = new Notification('Subject');
+        $recipient = new GuestRecipient(
+            id: null,
+            expiresAfter: 3600, // 1 hour
+        );
+
+        $message = $channel->send(notification: $notification, recipient: $recipient);
+
+        $this->assertSame('2026-01-01 13:00:00', $message->get('expires_at'));
+    }
+    
+    public function testGuestRecipientExpiresAfterDateInterval()
+    {
+        $clock = new FrozenClock(new DateTimeImmutable('2026-01-01 12:00:00'));
+
+        $channel = new Channel(
+            name: 'browser',
+            repository: new StorageRepository(
+                storage: new InMemoryStorage(items: []),
+                table: 'notifications',
+            ),
+            clock: $clock,
+            container: new Container(),
+        );
+
+        $notification = new Notification('Subject');
+        $recipient = new GuestRecipient(
+            id: null,
+            expiresAfter: new \DateInterval('PT2H'),
+        );
+
+        $message = $channel->send(notification: $notification, recipient: $recipient);
+
+        $this->assertSame('2026-01-01 14:00:00', $message->get('expires_at'));
+    }
+    
+    public function testGuestRecipientWithoutExpirationStoresNull()
+    {
+        $channel = $this->createChannel();
+
+        $notification = new Notification('Subject');
+        $recipient = new GuestRecipient(
+            id: null,
+            expiresAfter: null,
+        );
+
+        $message = $channel->send(notification: $notification, recipient: $recipient);
+
+        $this->assertNull($message->get('expires_at'));
     }
 }

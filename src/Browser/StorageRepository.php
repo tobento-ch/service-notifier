@@ -30,9 +30,10 @@ class StorageRepository extends DefaultStorageRepository
         return [
             new Column\Id(),
             new Column\Text('name')->type(length: 255),
-            new Column\Text('recipient_id')->type(length: 36),
+            new Column\Text('recipient_id')->type(length: 36, nullable: true),
             new Column\Text('recipient_type')->type(length: 255),
             new Column\Json('data'),
+            new Column\Datetime('expires_at')->type(nullable: true),
             new Column\Datetime('read_at')->type(nullable: true),
             new Column\Datetime('created_at')->type(nullable: true),
         ];

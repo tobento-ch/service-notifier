@@ -1,6 +1,6 @@
 {
     "name": "tobento/service-notifier",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "type": "library",
     "description": "Notifier interface for PHP applications.",
     "keywords": [
@@ -28,18 +28,21 @@
         "tobento/service-autowire": "^2.0",
         "tobento/service-repository": "^2.0",
         "tobento/service-mail": "^2.0",
+        "psr/clock": "^1.0",
         "psr/container": "^2.0",
         "psr/http-message": "^2.0",
         "psr/event-dispatcher": "^1.0",
         "symfony/notifier": "^7.3"
     },
     "suggest": {
+        "tobento/service-clock": "May be used to for browser channel",
         "tobento/service-repository-storage": "To support storage channel",
         "tobento/service-migration": "To support storage repository migration"
     },
     "require-dev": {
         "phpunit/phpunit": "^12.3",
         "vimeo/psalm": "^6.13",
+        "tobento/service-clock": "^2.0",
         "tobento/service-container": "^2.0",
         "tobento/service-event": "^2.0",
         "tobento/service-queue": "^2.0",

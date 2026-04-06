@@ -35,7 +35,7 @@ class StorageRepository extends DefaultStorageRepository
             new Column\Json('data'),
             new Column\Datetime('expires_at')->type(nullable: true),
             new Column\Datetime('read_at')->type(nullable: true),
-            new Column\Datetime('created_at')->type(nullable: true),
+            new Column\Datetime('created_at')->autoCreate(),
         ];
     }
 }

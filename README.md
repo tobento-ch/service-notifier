@@ -12,6 +12,7 @@ Notifier interface for PHP applications using [Symfony Notifier](https://github.
         - [Creating And Sending Notifications](#creating-and-sending-notifications)
     - [Notifier](#notifier)
         - [Create Notifier](#create-notifier)
+        - [Composite Notifier](#composite-notifier)
     - [Notifications](#notifications)
         - [Notification](#notification)
         - [Abstract Notification](#abstract-notification)
@@ -133,6 +134,23 @@ var_dump($notifier instanceof NotifierInterface);
 ```
 
 Check out the [Channels](#channels) section to learn more about the available channels.
+
+### Composite Notifier
+
+A notifier that forwards the notification to multiple notifiers at once.
+
+```php
+use Tobento\Service\Notifier\CompositeNotifier;
+use Tobento\Service\Notifier\NotifierInterface;
+
+$notifier = new CompositeNotifier(
+    $someNotifier, // NotifierInterface
+    $anotherNotifier, // NotifierInterface
+);
+
+var_dump($notifier instanceof NotifierInterface);
+// bool(true)
+```
 
 ## Notifications
 

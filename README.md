@@ -16,6 +16,7 @@ Notifier interface for PHP applications using [Symfony Notifier](https://github.
     - [Notifications](#notifications)
         - [Notification](#notification)
         - [Abstract Notification](#abstract-notification)
+        - [Notification Adapter](#notification-adapter)
     - [Recipients](#recipients)
         - [Recipient](#recipient)
         - [Address Recipient](#address-recipient)
@@ -239,6 +240,54 @@ class OrderNotification extends AbstractNotification implements Message\ToSms
         return new Message\Sms(
             subject: sprintf('Thanks for your order %s', $this->order->name),
         );
+    }
+}
+```
+
+### Notification Adapter
+
+A notification replacing another one may implement the ```NotificationAdapterInterface::class```. This way, the replaced notification is still available, e.g. in event listeners.
+
+```php
+use Tobento\Service\Notifier\AbstractNotification;
+use Tobento\Service\Notifier\NotificationAdapterInterface;
+use Tobento\Service\Notifier\NotificationInterface;
+
+class CustomOrderNotification extends AbstractNotification implements NotificationAdapterInterface
+{
+    public function __construct(
+        protected NotificationInterface $notification,
+    ) {}
+    
+    public function adaptedNotification(): NotificationInterface
+    {
+        return $this->notification;
+    }
+}
+```
+
+In a listener, you may retrieve the replaced notification:
+
+```php
+use Tobento\Service\Notifier\Event\NotificationSent;
+use Tobento\Service\Notifier\NotificationAdapterInterface;
+
+class OrderNotifiedListener
+{
+    public function __invoke(NotificationSent $event): void
+    {
+        $notification = $event->messages()->notification();
+        
+        if ($notification instanceof NotificationAdapterInterface) {
+            $notification = $notification->adaptedNotification();
+        }
+        
+        if (! $notification instanceof OrderNotification) {
+            return;
+        }
+        
+        // The channels the recipient was notified on:
+        $channels = $event->messages()->successful()->channelNames();
     }
 }
 ```

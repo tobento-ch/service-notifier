@@ -1033,7 +1033,7 @@ The storage needs to have the following table columns:
 | --- | --- | --- |
 | ```id``` | bigint(21) primary key | - |
 | ```name``` | varchar(255) | Used to store the notification name |
-| ```recipient_id``` | varchar(36) | Used to store the recipient id |
+| ```recipient_id``` | varchar(64) | Used to store the recipient id |
 | ```recipient_type``` | varchar(255) | Used to store the recipient type |
 | ```data``` | json | Used to store the message data |
 | ```read_at``` | datetime | Used to store date read at |
@@ -1186,7 +1186,7 @@ The storage needs to have the following table columns:
 | --- | --- | --- |
 | ```id``` | bigint(21) primary key | - |
 | ```name``` | varchar(255) | Used to store the notification name |
-| ```recipient_id``` | varchar(36) | Used to store the recipient id |
+| ```recipient_id``` | varchar(64) | Used to store the recipient id |
 | ```recipient_type``` | varchar(255) | Used to store the recipient type |
 | ```data``` | json | Used to store the message data |
 | ```expires_at``` | datetime | Stores the exact date and time when the notification becomes invalid and should no longer be shown to the recipient. |
